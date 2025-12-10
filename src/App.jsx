@@ -1,4 +1,4 @@
-import LoginPage from "./pages/LoginPage.jsx";
+import LoginPage from "./pages/auth/LoginPage.jsx";
 import DashboardPage from "./pages/dashboard/DashboardPage.jsx";
 import SidebarLayout from "./components/layout/SidebarLayout.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
