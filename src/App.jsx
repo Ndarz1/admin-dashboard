@@ -1,7 +1,7 @@
 import LoginPage from "./pages/auth/LoginPage.jsx";
 import DashboardPage from "./pages/dashboard/DashboardPage.jsx";
 import SidebarLayout from "./components/layout/SidebarLayout.jsx";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 const App = () => {
   return (
@@ -9,7 +9,8 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<SidebarLayout />}>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
