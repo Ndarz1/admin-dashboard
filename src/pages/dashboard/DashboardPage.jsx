@@ -10,6 +10,7 @@ import {
 } from "recharts";
 
 const DashboardPage = () => {
+  // Data Dummy untuk Statistik Atas
   const stats = [
     {
       title: "Total Reservasi",
@@ -97,6 +98,7 @@ const DashboardPage = () => {
     },
   ];
 
+  // Data Dummy untuk Tabel
   const recentBookings = [
     {
       id: 1,
@@ -132,6 +134,7 @@ const DashboardPage = () => {
     },
   ];
 
+  // Data Dummy untuk Grafik
   const chartData = [
     { name: "Jul", total: 40 },
     { name: "Agu", total: 30 },
@@ -142,12 +145,51 @@ const DashboardPage = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-8 w-full fade-in">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
-        <p className="text-gray-500">Selamat datang kembali, Admin.</p>
+    <div className="flex flex-col gap-8 w-full fade-in pb-10">
+      {/* --- HEADER SECTION (New) --- */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Dashboard Overview
+          </h2>
+          <p className="text-gray-500">Selamat datang kembali, Admin.</p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Tombol Notifikasi */}
+          <button className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 relative transition-colors duration-200">
+            <svg
+              className="w-5 h-5 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+          </button>
+
+          {/* Profil Admin Kecil */}
+          <div className="flex items-center gap-3 bg-white pl-2 pr-4 py-1.5 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+            <div className="w-8 h-8 rounded-full bg-ruby-red-100 flex items-center justify-center text-ruby-red-600 font-bold text-sm">
+              AD
+            </div>
+            <div className="text-left hidden md:block">
+              <p className="text-sm font-bold text-gray-700 leading-none">
+                Admin
+              </p>
+              <p className="text-[10px] text-gray-400">Super User</p>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* --- STATS GRID --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <div
@@ -170,7 +212,9 @@ const DashboardPage = () => {
         ))}
       </div>
 
+      {/* --- CHART & TABLE SECTION --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Kolom Grafik (Kiri) */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
           <h3 className="text-lg font-bold text-gray-800 mb-6">
             Statistik Peminjaman
@@ -210,6 +254,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
+        {/* Kolom Tabel (Kanan) */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-bold text-gray-800">
