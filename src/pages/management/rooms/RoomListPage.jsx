@@ -1,66 +1,17 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Select from "react-select";
-import RoomCard from "../../../components/rooms/RoomCard"; // Import Component Baru
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import RoomCard from "../../../components/rooms/RoomCard";
+
+const MySwal = withReactContent(Swal);
 
 const RoomListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
 
-  const typeOptions = [
-    { value: "All", label: "All Categories" },
-    { value: "Laboratorium", label: "Laboratorium" },
-    { value: "Meeting Room", label: "Meeting Room" },
-    { value: "Aula", label: "Aula" },
-    { value: "Kelas", label: "Classroom" },
-  ];
-
-  // React Select Custom Styles (Raffles Theme)
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      backgroundColor: "transparent",
-      border: "none",
-      boxShadow: "none",
-      cursor: "pointer",
-      minWidth: "180px",
-      borderBottom: "1px solid #e5e7eb",
-      borderRadius: 0,
-      "&:hover": { borderBottom: "1px solid #be123c" },
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "#be123c"
-        : state.isFocused
-          ? "#fff1f2"
-          : "white",
-      color: state.isSelected ? "white" : "#374151",
-      padding: 10,
-      cursor: "pointer",
-      fontSize: "0.875rem",
-    }),
-    singleValue: (provided) => ({
-      ...provided,
-      fontFamily: "serif",
-      color: "#1f2937",
-      fontWeight: 500,
-    }),
-    dropdownIndicator: (provided) => ({
-      ...provided,
-      color: "#9ca3af",
-      "&:hover": { color: "#be123c" },
-    }),
-    indicatorSeparator: () => ({ display: "none" }),
-    menu: (provided) => ({
-      ...provided,
-      borderRadius: "0.5rem",
-      boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-      zIndex: 50,
-    }),
-  };
-
-  const rooms = [
+  const [rooms, setRooms] = useState([
     {
       id: 1,
       name: "Laboratorium Komputer 1",
@@ -111,7 +62,83 @@ const RoomListPage = () => {
       image:
         "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=1000",
     },
+  ]);
+
+  const typeOptions = [
+    { value: "All", label: "All Categories" },
+    { value: "Laboratorium", label: "Laboratorium" },
+    { value: "Meeting Room", label: "Meeting Room" },
+    { value: "Aula", label: "Aula" },
+    { value: "Kelas", label: "Classroom" },
   ];
+
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      border: "none",
+      boxShadow: "none",
+      cursor: "pointer",
+      minWidth: "180px",
+      borderBottom: "1px solid #e5e7eb",
+      borderRadius: 0,
+      "&:hover": { borderBottom: "1px solid #be123c" },
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "#be123c"
+        : state.isFocused
+          ? "#fff1f2"
+          : "white",
+      color: state.isSelected ? "white" : "#374151",
+      padding: 10,
+      cursor: "pointer",
+      fontSize: "0.875rem",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      fontFamily: "serif",
+      color: "#1f2937",
+      fontWeight: 500,
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      color: "#9ca3af",
+      "&:hover": { color: "#be123c" },
+    }),
+    indicatorSeparator: () => ({ display: "none" }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      zIndex: 50,
+    }),
+  };
+
+  const handleDelete = (id) => {
+    MySwal.fire({
+      title: <p className="font-serif text-2xl text-gray-800">Remove Room?</p>,
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#be123c",
+      cancelButtonColor: "#d1d5db",
+      confirmButtonText: "Yes, Remove",
+      customClass: { popup: "rounded-none font-sans" },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setRooms((prev) => prev.filter((room) => room.id !== id));
+        MySwal.fire({
+          icon: "success",
+          title: "Deleted",
+          confirmButtonColor: "#be123c",
+          timer: 1500,
+        });
+      }
+    });
+  };
 
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = room.name
@@ -140,7 +167,6 @@ const RoomListPage = () => {
         </Link>
       </div>
 
-      {/* --- FILTER & SEARCH TOOLBAR --- */}
       <div className="flex flex-col sm:flex-row gap-6 items-center justify-between z-40 relative">
         <div className="relative w-full sm:w-96 group">
           <input
@@ -182,10 +208,9 @@ const RoomListPage = () => {
         </div>
       </div>
 
-      {/* --- ROOM GRID --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12 z-0">
         {filteredRooms.map((room) => (
-          <RoomCard key={room.id} room={room} />
+          <RoomCard key={room.id} room={room} onDelete={handleDelete} />
         ))}
       </div>
     </div>

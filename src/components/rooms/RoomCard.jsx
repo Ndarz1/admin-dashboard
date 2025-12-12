@@ -1,8 +1,7 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Import Link untuk navigasi edit
+import { Link } from "react-router-dom";
 
 const RoomCard = ({ room }) => {
-  // Helper untuk warna status
   const getStatusClass = (status) => {
     switch (status) {
       case "Available":
@@ -16,7 +15,6 @@ const RoomCard = ({ room }) => {
 
   return (
     <div className="group flex flex-col bg-white cursor-pointer">
-      {/* --- IMAGE SECTION --- */}
       <div className="relative h-[22rem] overflow-hidden w-full">
         <img
           src={room.image}
@@ -24,7 +22,6 @@ const RoomCard = ({ room }) => {
           className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
         />
 
-        {/* Status Badge */}
         <div className="absolute top-6 left-6">
           <span
             className={`px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur-md ${getStatusClass(room.status)}`}
@@ -33,7 +30,6 @@ const RoomCard = ({ room }) => {
           </span>
         </div>
 
-        {/* Hover Overlay Button */}
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
           <button className="bg-white text-black px-8 py-3 text-xs uppercase tracking-widest hover:bg-ruby-red-600 hover:text-white transition-colors duration-300 transform translate-y-4 group-hover:translate-y-0 duration-500">
             View Details
@@ -41,7 +37,6 @@ const RoomCard = ({ room }) => {
         </div>
       </div>
 
-      {/* --- CONTENT SECTION --- */}
       <div className="pt-6 text-center px-4">
         <p className="text-[10px] font-bold text-ruby-red-600 uppercase tracking-[0.25em] mb-3">
           {room.type}
@@ -87,9 +82,7 @@ const RoomCard = ({ room }) => {
         </div>
       </div>
 
-      {/* --- FOOTER ACTIONS --- */}
       <div className="mt-4 flex justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
-        {/* Update: Tombol Edit sekarang mengarah ke Form Edit */}
         <Link
           to={`/rooms/edit/${room.id}`}
           className="text-xs uppercase tracking-wider text-gray-400 hover:text-gray-900 border-b border-transparent hover:border-gray-900 pb-1 transition-all"

@@ -1,16 +1,17 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-// Import Sub-Components
+// Import Sub-Components yang sudah kita buat
 import RoomInfoSection from "../../../components/rooms/form/RoomInfoSection";
 import RoomImageSection from "../../../components/rooms/form/RoomImageSection";
 import RoomAmenitiesSection from "../../../components/rooms/form/RoomAmenitiesSection";
 
 const RoomFormPage = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const isEditMode = Boolean(id);
+  const { id } = useParams(); // 1. Ambil ID dari URL
+  const isEditMode = Boolean(id); // 2. Cek apakah ada ID (Mode Edit)
 
+  // State awal kosong
   const [formData, setFormData] = useState({
     name: "",
     type: "Laboratorium",
@@ -23,25 +24,36 @@ const RoomFormPage = () => {
     imageFile: null,
   });
 
+  // 3. EFFECT: ISI DATA JIKA MODE EDIT
   useEffect(() => {
     if (isEditMode) {
-      // Simulasi Fetch Data
-      const dummyDataFromDB = {
+      // --- SIMULASI AMBIL DATA DARI DATABASE ---
+      // Di aplikasi nyata, Anda akan fetch API di sini: axios.get(`/api/rooms/${id}`)
+      console.log("Editing Room ID:", id); // Debugging
+
+      // Data Dummy untuk simulasi (Pastikan struktur ini sama dengan state awal)
+      const existingData = {
         name: "Laboratorium Komputer 1",
         type: "Laboratorium",
-        capacity: "40",
+        capacity: 40,
         location: "Gedung A, Lantai 2",
         description:
-          "Ruangan laboratorium utama dengan spesifikasi PC high-end.",
+          "Ruangan laboratorium utama dengan spesifikasi PC high-end untuk praktikum.",
         facilities: ["AC", "Projector", "PC Workstation", "High-Speed WiFi"],
         status: "Available",
         imagePreview:
           "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&q=80&w=1000",
       };
-      setFormData((prev) => ({ ...prev, ...dummyDataFromDB }));
-    }
-  }, [isEditMode]);
 
+      // Update state dengan data yang ditemukan
+      setFormData((prev) => ({
+        ...prev,
+        ...existingData,
+      }));
+    }
+  }, [isEditMode, id]);
+
+  // --- HANDLERS (Sama seperti sebelumnya) ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

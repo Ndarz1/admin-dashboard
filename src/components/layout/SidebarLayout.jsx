@@ -1,8 +1,14 @@
 import React from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import logo from "../../assets/logo.png"; // Pastikan path logo sesuai
 
 const SidebarLayout = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    navigate("/login"); 
+  };
+
   const baseClass =
     "flex items-center justify-between px-8 py-3 text-xs uppercase tracking-[0.15em] transition-all duration-500 border-l-2 group";
 
@@ -136,7 +142,11 @@ const SidebarLayout = () => {
           >
             Settings
           </NavLink>
-          <button className="w-full text-center px-4 py-3 text-xs uppercase tracking-[0.2em] text-red-400 hover:text-red-700 hover:bg-red-50 transition-all duration-500">
+
+          <button
+            onClick={handleLogout}
+            className="w-full text-center px-4 py-3 text-xs uppercase tracking-[0.2em] text-red-400 hover:text-red-700 hover:bg-red-50 transition-all duration-500"
+          >
             Sign Out
           </button>
         </div>
