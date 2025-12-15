@@ -15,7 +15,7 @@ const RoomCard = ({ room }) => {
 
   return (
     <div className="group flex flex-col bg-white cursor-pointer">
-      <div className="relative h-[22rem] overflow-hidden w-full">
+      <div className="relative h-88 overflow-hidden w-full">
         <img
           src={room.image}
           alt={room.name}
@@ -44,7 +44,7 @@ const RoomCard = ({ room }) => {
         <h3 className="font-serif text-2xl text-gray-900 mb-2 group-hover:text-ruby-red-600 transition-colors duration-300">
           {room.name}
         </h3>
-        <div className="w-8 h-[1px] bg-gray-300 mx-auto my-4 group-hover:w-16 transition-all duration-500"></div>
+        <div className="w-8 h-px bg-gray-300 mx-auto my-4 group-hover:w-16 transition-all duration-500"></div>
 
         <div className="flex justify-center items-center gap-6 text-gray-500 text-sm font-light">
           <div className="flex items-center gap-2">
@@ -77,7 +77,7 @@ const RoomCard = ({ room }) => {
                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
               />
             </svg>
-            <span className="truncate max-w-[150px]">{room.location}</span>
+            <span className="truncate max-w-37.5">{room.location}</span>
           </div>
         </div>
       </div>

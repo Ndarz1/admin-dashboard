@@ -33,7 +33,7 @@ const UserCard = ({ user, onDelete }) => {
         <button className="flex-1 py-3 text-xs uppercase tracking-widest text-gray-500 hover:text-gray-900 hover:bg-white transition-colors">
           View Profile
         </button>
-        <div className="w-[1px] bg-gray-200"></div>
+        <div className="w-px bg-gray-200"></div>
         <button
           onClick={() => onDelete(user.id)}
           className="flex-1 py-3 text-xs uppercase tracking-widest text-red-400 hover:text-red-700 hover:bg-white transition-colors"

@@ -45,7 +45,7 @@ const RoomFormPage = () => {
           "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&q=80&w=1000",
       };
 
-      // Update state dengan data yang ditemukan
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData((prev) => ({
         ...prev,
         ...existingData,
