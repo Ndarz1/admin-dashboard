@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { AnimatePresence } from "framer-motion";
@@ -7,44 +7,70 @@ import RequestCard from "../../components/reservations/RequestCard";
 const MySwal = withReactContent(Swal);
 
 const RequestPage = () => {
-  const [requests, setRequests] = useState([
-    {
-      id: 1,
-      user: "Ahmad Dahlan",
-      role: "Mahasiswa - Informatika",
-      room: "Laboratorium Komputer 1",
-      date: "12 Dec 2025",
-      time: "08:00 - 10:00",
-      purpose: "Praktikum Pemrograman Web Lanjut",
-      pax: 35,
-      status: "Pending",
-      avatar: "AD",
-    },
-    {
-      id: 2,
-      user: "Dr. Siti Aminah",
-      role: "Dosen - Kedokteran",
-      room: "Ruang Rapat Utama",
-      date: "13 Dec 2025",
-      time: "13:00 - 15:00",
-      purpose: "Rapat Koordinasi Akreditasi",
-      pax: 12,
-      status: "Pending",
-      avatar: "SA",
-    },
-    {
-      id: 3,
-      user: "BEM Fakultas",
-      role: "Organisasi Mahasiswa",
-      room: "Aula Serbaguna",
-      date: "15 Dec 2025",
-      time: "08:00 - 16:00",
-      purpose: "Seminar Nasional Teknologi",
-      pax: 150,
-      status: "Pending",
-      avatar: "BF",
-    },
-  ]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch("http://localhost:5000/api/reservations", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await response.json();
+
+      if (json.success) {
+        const pendingRequests = json.data.filter((r) => r.status === "pending");
+
+        const formattedData = pendingRequests.map((item) => {
+          let manualName = null;
+          let manualRole = "Mahasiswa";
+
+          if (item.purpose && item.purpose.includes("[Data Pemohon]")) {
+            const details = item.purpose.split("[Data Pemohon]")[1];
+            const nameMatch = details.match(/Nama:\s*(.*)/);
+            if (nameMatch) manualName = nameMatch[1].trim();
+          }
+
+          const cleanPurpose = item.purpose
+            ? item.purpose.split("[Data Pemohon]")[0].trim()
+            : "-";
+
+          return {
+            id: item.id,
+            user: manualName || (item.user ? item.user.name : "Unknown User"),
+            role: manualRole,
+            room: item.room ? item.room.name : "Unknown Room",
+            date: item.event_date,
+            time: `${item.start_time} - ${item.end_time}`,
+            purpose: cleanPurpose,
+            pax: 50,
+            status: item.status,
+            avatar: manualName
+              ? manualName.charAt(0).toUpperCase()
+              : item.user
+              ? item.user.name.charAt(0).toUpperCase()
+              : "U",
+          };
+        });
+
+        setRequests(formattedData);
+      }
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      MySwal.fire({
+        icon: "error",
+        title: "Connection Error",
+        text: "Failed to load reservation requests.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAction = (id, action) => {
     MySwal.fire({
@@ -57,21 +83,65 @@ const RequestPage = () => {
       confirmButtonText:
         action === "approve" ? "Yes, Grant Access" : "Yes, Decline",
       cancelButtonText: "Cancel",
+      input: action === "reject" ? "textarea" : undefined,
+      inputPlaceholder: "Reason for rejection...",
       customClass: {
         popup: "rounded-none font-sans",
       },
-    }).then((result) => {
+      preConfirm: (reason) => {
+        if (action === "reject" && !reason) {
+          Swal.showValidationMessage("Please enter a rejection reason");
+        }
+        return reason;
+      },
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        const rejectionReason = result.value;
+        const statusPayload = action === "approve" ? "approved" : "rejected";
+
+        const previousRequests = [...requests];
         setRequests((prev) => prev.filter((req) => req.id !== id));
 
-        MySwal.fire({
-          title: action === "approve" ? "Access Granted" : "Declined",
-          text: "The request has been processed successfully.",
-          icon: "success",
-          confirmButtonColor: "#be123c",
-          timer: 2000,
-          timerProgressBar: true,
-        });
+        try {
+          const token = localStorage.getItem("authToken");
+
+          const response = await fetch(
+            `http://localhost:5000/api/reservations/admin/${id}/status`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                status: statusPayload,
+                rejection_reason: rejectionReason,
+              }),
+            }
+          );
+
+          const json = await response.json();
+
+          if (json.success) {
+            MySwal.fire({
+              title: action === "approve" ? "Access Granted" : "Declined",
+              text: "The request has been processed successfully.",
+              icon: "success",
+              confirmButtonColor: "#be123c",
+              timer: 2000,
+              timerProgressBar: true,
+            });
+          } else {
+            throw new Error(json.message);
+          }
+        } catch (error) {
+          setRequests(previousRequests);
+          MySwal.fire({
+            icon: "error",
+            title: "Error",
+            text: error.message || "Failed to update status",
+          });
+        }
       }
     });
   };
@@ -92,12 +162,16 @@ const RequestPage = () => {
             Pending Items:
           </span>
           <span className="text-xl font-serif font-bold text-ruby-red-600">
-            {requests.length}
+            {loading ? "..." : requests.length}
           </span>
         </div>
       </div>
 
-      {requests.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-20 text-gray-400 animate-pulse">
+          Loading requests data...
+        </div>
+      ) : requests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
           <svg
             className="w-16 h-16 mb-4 opacity-20"

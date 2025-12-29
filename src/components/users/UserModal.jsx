@@ -4,15 +4,29 @@ const UserModal = ({ isOpen, onClose, onSave }) => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+    password: "",
     role: "Mahasiswa",
     department: "",
   });
 
   const handleSave = () => {
-    // Kirim data ke parent
+    if (
+      !newUser.name ||
+      !newUser.email ||
+      !newUser.password ||
+      !newUser.department
+    ) {
+      alert("Please fill all fields");
+      return;
+    }
     onSave(newUser);
-    // Reset form setelah simpan
-    setNewUser({ name: "", email: "", role: "Mahasiswa", department: "" });
+    setNewUser({
+      name: "",
+      email: "",
+      password: "",
+      role: "Mahasiswa",
+      department: "",
+    });
   };
 
   if (!isOpen) return null;
@@ -44,13 +58,14 @@ const UserModal = ({ isOpen, onClose, onSave }) => {
         </h3>
 
         <div className="flex flex-col gap-5">
+          {/* Name */}
           <div className="group">
             <label className="block text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">
               Full Name
             </label>
             <input
               type="text"
-              className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600 transition-colors font-serif text-lg"
+              className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600 font-serif text-lg"
               placeholder="e.g. John Doe"
               value={newUser.name}
               onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
@@ -63,11 +78,26 @@ const UserModal = ({ isOpen, onClose, onSave }) => {
             </label>
             <input
               type="email"
-              className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600 transition-colors"
-              placeholder="john@uad.ac.id"
+              className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600"
+              placeholder="john@ayana.ac.id"
               value={newUser.email}
               onChange={(e) =>
                 setNewUser({ ...newUser, email: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="group">
+            <label className="block text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600"
+              placeholder="••••••••"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
               }
             />
           </div>
@@ -78,7 +108,7 @@ const UserModal = ({ isOpen, onClose, onSave }) => {
                 Role
               </label>
               <select
-                className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600 transition-colors bg-transparent cursor-pointer"
+                className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600 bg-transparent cursor-pointer"
                 value={newUser.role}
                 onChange={(e) =>
                   setNewUser({ ...newUser, role: e.target.value })
@@ -95,7 +125,7 @@ const UserModal = ({ isOpen, onClose, onSave }) => {
               </label>
               <input
                 type="text"
-                className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600 transition-colors"
+                className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-ruby-red-600"
                 placeholder="Informatika"
                 value={newUser.department}
                 onChange={(e) =>

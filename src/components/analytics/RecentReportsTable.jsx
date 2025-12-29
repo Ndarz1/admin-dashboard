@@ -1,29 +1,50 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 
 const RecentReportsTable = () => {
-  const reports = [
-    {
-      id: 1,
-      name: "Monthly_Usage_November_2025.pdf",
-      date: "01 Dec 2025",
-      size: "2.4 MB",
-      type: "PDF",
-    },
-    {
-      id: 2,
-      name: "Financial_Summary_Q3.xlsx",
-      date: "15 Oct 2025",
-      size: "1.1 MB",
-      type: "Excel",
-    },
-    {
-      id: 3,
-      name: "Faculty_Booking_Log_2025.csv",
-      date: "10 Oct 2025",
-      size: "850 KB",
-      type: "CSV",
-    },
-  ];
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchReports = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        "http://localhost:5000/api/analytics/reports",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        setReports(json.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reports", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const handleDownload = (fileName) => {
+    Swal.fire({
+      title: "Downloading...",
+      text: `Starting download for ${fileName}`,
+      timer: 1500,
+      showConfirmButton: false,
+      icon: "success",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-gray-400">Loading reports...</div>
+    );
+  }
 
   return (
     <div className="bg-white border border-gray-100 p-8 shadow-sm">
@@ -67,7 +88,10 @@ const RecentReportsTable = () => {
                 <td className="py-4 text-xs text-gray-500">{file.date}</td>
                 <td className="py-4 text-xs text-gray-500">{file.size}</td>
                 <td className="py-4 text-right">
-                  <button className="text-gray-400 hover:text-ruby-red-600 transition-colors">
+                  <button
+                    onClick={() => handleDownload(file.name)}
+                    className="text-gray-400 hover:text-ruby-red-600 transition-colors"
+                  >
                     <svg
                       className="w-5 h-5"
                       fill="none"

@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-
-// Import Komponen
 import FacilityCard from "../../../components/facilities/FacilityCard";
 import FacilityModal from "../../../components/facilities/FacilityModal";
 
@@ -10,58 +9,33 @@ const MySwal = withReactContent(Swal);
 
 const FacilityPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null); // Menyimpan item yang sedang diedit
+  const [editingItem, setEditingItem] = useState(null);
+  const [facilities, setFacilities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [facilities, setFacilities] = useState([
-    {
-      id: 1,
-      name: "HD Projector",
-      category: "Electronic",
-      stock: 12,
-      condition: "Good",
-      icon: "video",
-    },
-    {
-      id: 2,
-      name: "Whiteboard",
-      category: "Stationery",
-      stock: 25,
-      condition: "Good",
-      icon: "board",
-    },
-    {
-      id: 3,
-      name: "Sound System",
-      category: "Electronic",
-      stock: 5,
-      condition: "Maintenance",
-      icon: "speaker",
-    },
-    {
-      id: 4,
-      name: "Air Conditioner",
-      category: "Electronic",
-      stock: 30,
-      condition: "Good",
-      icon: "ac",
-    },
-    {
-      id: 5,
-      name: "Ergonomic Chair",
-      category: "Furniture",
-      stock: 150,
-      condition: "Good",
-      icon: "chair",
-    },
-  ]);
+  const fetchFacilities = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/amenities");
+      const json = await response.json();
+      if (json.success) {
+        setFacilities(json.data);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Logic: Buka Modal (Bisa Mode Add atau Edit)
+  useEffect(() => {
+    fetchFacilities();
+  }, []);
+
   const handleOpenModal = (item = null) => {
-    setEditingItem(item); // Jika item null = Add Mode
+    setEditingItem(item);
     setIsModalOpen(true);
   };
 
-  // Logic: Delete Item
   const handleDelete = (id) => {
     MySwal.fire({
       title: <p className="font-serif text-2xl text-gray-800">Remove Item?</p>,
@@ -72,47 +46,56 @@ const FacilityPage = () => {
       cancelButtonColor: "#d1d5db",
       confirmButtonText: "Yes, Remove",
       customClass: { popup: "rounded-none font-sans" },
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setFacilities((prev) => prev.filter((item) => item.id !== id));
-        MySwal.fire({
-          icon: "success",
-          title: "Deleted",
-          confirmButtonColor: "#be123c",
-          timer: 1500,
-        });
+        try {
+          await fetch(`http://localhost:5000/api/amenities/${id}`, {
+            method: "DELETE",
+          });
+          setFacilities((prev) => prev.filter((item) => item.id !== id));
+          MySwal.fire({
+            icon: "success",
+            title: "Deleted",
+            confirmButtonColor: "#be123c",
+            timer: 1500,
+          });
+        } catch (error) {
+          MySwal.fire("Error", "Failed to delete", "error");
+        }
       }
     });
   };
 
-  // Logic: Simpan Data (Add atau Update)
-  const handleSaveFacility = (formData) => {
-    if (editingItem) {
-      // Logic UPDATE
-      setFacilities((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id ? { ...formData, id: item.id } : item,
-        ),
-      );
-    } else {
-      // Logic ADD NEW
-      const newItem = {
-        ...formData,
-        id: Date.now(),
-        icon: "default", // Di real app, user pilih icon
-      };
-      setFacilities((prev) => [newItem, ...prev]);
+  const handleSaveFacility = async (formData) => {
+    try {
+      const url = editingItem
+        ? `http://localhost:5000/api/amenities/${editingItem.id}`
+        : "http://localhost:5000/api/amenities";
+
+      const method = editingItem ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const json = await response.json();
+
+      if (json.success) {
+        fetchFacilities();
+        setIsModalOpen(false);
+        MySwal.fire({
+          icon: "success",
+          title: "Saved",
+          text: "Inventory updated successfully",
+          confirmButtonColor: "#be123c",
+          timer: 1500,
+        });
+      }
+    } catch (error) {
+      console.error(error);
     }
-
-    setIsModalOpen(false);
-
-    MySwal.fire({
-      icon: "success",
-      title: "Saved",
-      text: "Inventory updated successfully",
-      confirmButtonColor: "#be123c",
-      timer: 1500,
-    });
   };
 
   return (
@@ -127,25 +110,28 @@ const FacilityPage = () => {
           </p>
         </div>
         <button
-          onClick={() => handleOpenModal(null)} // null = Add New
+          onClick={() => handleOpenModal(null)}
           className="bg-gray-900 text-white px-8 py-3 text-xs uppercase tracking-[0.2em] hover:bg-ruby-red-600 transition-colors duration-500 shadow-lg"
         >
           Add New Item
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {facilities.map((item) => (
-          <FacilityCard
-            key={item.id}
-            item={item}
-            onEdit={handleOpenModal}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-center text-gray-400">Loading amenities...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {facilities.map((item) => (
+            <FacilityCard
+              key={item.id}
+              item={item}
+              onEdit={handleOpenModal}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
 
-      {/* Modal Terpisah */}
       <FacilityModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

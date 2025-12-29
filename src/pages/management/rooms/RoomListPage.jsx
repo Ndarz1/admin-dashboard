@@ -1,218 +1,234 @@
-import React, { useState } from "react";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import RoomCard from "../../../components/rooms/RoomCard";
+import { Plus, Search, Loader2 } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+
+import RoomCard from "../../../components/rooms/RoomCard"; // Pastikan path benar
 
 const MySwal = withReactContent(Swal);
 
 const RoomListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [rooms, setRooms] = useState([
-    {
-      id: 1,
-      name: "Laboratorium Komputer 1",
-      type: "Laboratorium",
-      capacity: 40,
-      location: "Gedung A, Lantai 2",
-      status: "Available",
-      image:
-        "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&q=80&w=1000",
-    },
-    {
-      id: 2,
-      name: "Ruang Rapat Utama",
-      type: "Meeting Room",
-      capacity: 15,
-      location: "Gedung B, Lantai 1",
-      status: "In Use",
-      image:
-        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=1000",
-    },
-    {
-      id: 3,
-      name: "Aula Serbaguna",
-      type: "Aula",
-      capacity: 200,
-      location: "Gedung C, Lantai Dasar",
-      status: "Maintenance",
-      image:
-        "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=1000",
-    },
-    {
-      id: 4,
-      name: "Laboratorium Jaringan",
-      type: "Laboratorium",
-      capacity: 30,
-      location: "Gedung A, Lantai 3",
-      status: "Available",
-      image:
-        "https://images.unsplash.com/photo-1558494949-ef526b0042a0?auto=format&fit=crop&q=80&w=1000",
-    },
-    {
-      id: 5,
-      name: "Kelas Teori 101",
-      type: "Kelas",
-      capacity: 60,
-      location: "Gedung D, Lantai 2",
-      status: "Available",
-      image:
-        "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=1000",
-    },
-  ]);
-
-  const typeOptions = [
-    { value: "All", label: "All Categories" },
-    { value: "Laboratorium", label: "Laboratorium" },
-    { value: "Meeting Room", label: "Meeting Room" },
-    { value: "Aula", label: "Aula" },
-    { value: "Kelas", label: "Classroom" },
-  ];
-
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      backgroundColor: "transparent",
-      border: "none",
-      boxShadow: "none",
-      cursor: "pointer",
-      minWidth: "180px",
-      borderBottom: "1px solid #e5e7eb",
-      borderRadius: 0,
-      "&:hover": { borderBottom: "1px solid #be123c" },
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isSelected
-        ? "#be123c"
-        : state.isFocused
-          ? "#fff1f2"
-          : "white",
-      color: state.isSelected ? "white" : "#374151",
-      padding: 10,
-      cursor: "pointer",
-      fontSize: "0.875rem",
-    }),
-    singleValue: (provided) => ({
-      ...provided,
-      fontFamily: "serif",
-      color: "#1f2937",
-      fontWeight: 500,
-    }),
-    dropdownIndicator: (provided) => ({
-      ...provided,
-      color: "#9ca3af",
-      "&:hover": { color: "#be123c" },
-    }),
-    indicatorSeparator: () => ({ display: "none" }),
-    menu: (provided) => ({
-      ...provided,
-      borderRadius: "0.5rem",
-      boxShadow:
-        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-      zIndex: 50,
-    }),
-  };
-
-  const handleDelete = (id) => {
-    MySwal.fire({
-      title: <p className="font-serif text-2xl text-gray-800">Remove Room?</p>,
-      text: "This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#be123c",
-      cancelButtonColor: "#d1d5db",
-      confirmButtonText: "Yes, Remove",
-      customClass: { popup: "rounded-none font-sans" },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setRooms((prev) => prev.filter((room) => room.id !== id));
-        MySwal.fire({
-          icon: "success",
-          title: "Deleted",
-          confirmButtonColor: "#be123c",
-          timer: 1500,
-        });
+  // 1. FETCH REAL DATA
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/rooms");
+      const json = await response.json();
+      if (json.success) {
+        setRooms(json.data);
+      } else {
+        toast.error("Failed to fetch rooms");
       }
-    });
+    } catch (error) {
+      console.error(error);
+      toast.error("Server connection error");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  // 2. FILTER DATA (Search & Category)
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = room.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesType = filterType === "All" || room.type === filterType;
+    const matchesType = filterType === "All" || room.category === filterType;
     return matchesSearch && matchesType;
   });
 
+  // 3. DELETE FUNCTION
+  const handleDelete = (id) => {
+    MySwal.fire({
+      title: (
+        <p className="font-serif text-2xl text-gray-900">
+          Remove from Collection?
+        </p>
+      ),
+      text: "This action cannot be undone. The room will be permanently deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#111827", // Black Elegant
+      cancelButtonColor: "#E5E7EB", // Gray Light
+      confirmButtonText: "Yes, Remove",
+      cancelButtonText: "Cancel",
+      customClass: {
+        popup: "rounded-sm font-sans",
+        confirmButton: "px-6 py-3 text-xs uppercase tracking-widest rounded-sm",
+        cancelButton:
+          "px-6 py-3 text-xs uppercase tracking-widest text-gray-600 rounded-sm",
+      },
+      buttonsStyling: false, // Custom styling enabled
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const token = localStorage.getItem("authToken");
+          const response = await fetch(
+            `http://localhost:5000/api/rooms/${id}`,
+            {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const json = await response.json();
+
+          if (json.success) {
+            setRooms((prev) => prev.filter((room) => room.id !== id));
+            toast.success("Room removed successfully");
+          } else {
+            toast.error(json.message || "Failed to delete");
+          }
+        } catch (error) {
+          toast.error("Error deleting room");
+        }
+      }
+    });
+  };
+
+  // --- STYLING UNTUK REACT-SELECT (ELEGANT STYLE) ---
+  const typeOptions = [
+    { value: "All", label: "All Categories" },
+    { value: "Laboratorium", label: "Laboratorium" },
+    { value: "Meeting Room", label: "Meeting Room" },
+    { value: "Auditorium", label: "Auditorium" },
+    { value: "Classroom", label: "Classroom" },
+  ];
+
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      backgroundColor: "transparent",
+      border: "none",
+      borderBottom: state.isFocused ? "1px solid #967D69" : "1px solid #E5E7EB",
+      boxShadow: "none",
+      cursor: "pointer",
+      borderRadius: 0,
+      minWidth: "200px",
+      "&:hover": { borderBottom: "1px solid #967D69" },
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      fontFamily: "serif",
+      color: "#1F2937",
+      fontSize: "1rem",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "#967D69"
+        : state.isFocused
+        ? "#F9FAFB"
+        : "white",
+      color: state.isSelected ? "white" : "#374151",
+      fontFamily: "sans-serif",
+      fontSize: "0.875rem",
+      padding: "10px 15px",
+      cursor: "pointer",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0px",
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+      marginTop: "8px",
+      zIndex: 50,
+    }),
+  };
+
   return (
     <div className="flex flex-col gap-10 w-full fade-in pb-20 font-sans text-gray-800">
-      <div className="flex flex-col md:flex-row justify-between items-end border-b border-gray-200 pb-6 gap-4">
+      <Toaster position="top-right" />
+
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-end border-b border-gray-100 pb-8 gap-6">
         <div>
           <h2 className="text-4xl font-serif text-gray-900 tracking-tight">
             The Collection
           </h2>
-          <p className="text-gray-500 mt-2 font-light tracking-wide">
-            Manage your exclusive spaces and facilities.
+          <p className="text-gray-400 mt-2 font-light tracking-wide text-sm">
+            Curated spaces designed for excellence.
           </p>
         </div>
         <Link
           to="/rooms/add"
-          className="bg-gray-900 text-white px-8 py-3 text-xs uppercase tracking-[0.2em] hover:bg-ruby-red-600 transition-colors duration-500"
+          className="bg-gray-900 text-white px-8 py-4 text-[10px] uppercase tracking-[0.25em] font-bold hover:bg-[#967D69] transition-all duration-500 shadow-lg active:scale-95 flex items-center gap-2"
         >
-          Add New Room
+          <Plus size={14} /> Add New Room
         </Link>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-6 items-center justify-between z-40 relative">
+      {/* FILTERS TOOLBAR */}
+      <div className="flex flex-col sm:flex-row gap-8 items-center justify-between z-40 bg-white sticky top-0 py-4">
+        {/* Search Input */}
         <div className="relative w-full sm:w-96 group">
           <input
             type="text"
             placeholder="Search residence..."
-            className="w-full bg-transparent border-b border-gray-300 py-3 pl-2 pr-8 focus:outline-none focus:border-ruby-red-600 transition-colors font-serif text-lg placeholder:font-sans placeholder:text-sm"
+            className="w-full bg-transparent border-b border-gray-200 py-3 pl-0 pr-8 focus:outline-none focus:border-[#967D69] transition-colors font-serif text-lg placeholder:font-sans placeholder:text-gray-300 placeholder:text-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <svg
-            className="w-4 h-4 text-gray-400 absolute right-0 top-4 group-focus-within:text-ruby-red-600 transition-colors"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <Search className="w-4 h-4 text-gray-400 absolute right-0 top-4 group-focus-within:text-[#967D69] transition-colors" />
         </div>
 
+        {/* Category Filter */}
         <div className="flex items-center gap-4 w-full sm:w-auto">
-          <span className="text-xs uppercase tracking-widest text-gray-400 whitespace-nowrap">
+          <span className="text-[10px] uppercase tracking-widest text-gray-400 whitespace-nowrap hidden md:block">
             Filter By:
           </span>
-          <div className="w-full sm:w-auto min-w-[200px]">
+          <div className="w-full sm:w-auto min-w-[220px]">
             <Select
               options={typeOptions}
-              value={typeOptions.find((option) => option.value === filterType)}
-              onChange={(selectedOption) => setFilterType(selectedOption.value)}
+              value={typeOptions.find((opt) => opt.value === filterType)}
+              onChange={(opt) => setFilterType(opt.value)}
               styles={customStyles}
               isSearchable={false}
-              placeholder="Select Type"
+              placeholder="All Categories"
             />
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12 z-0">
-        {filteredRooms.map((room) => (
-          <RoomCard key={room.id} room={room} onDelete={handleDelete} />
-        ))}
-      </div>
+      {/* GRID CONTENT */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400 animate-pulse">
+          <Loader2 className="animate-spin mb-4" size={32} />
+          <p className="text-xs uppercase tracking-widest">
+            Loading Collection...
+          </p>
+        </div>
+      ) : filteredRooms.length === 0 ? (
+        <div className="py-20 text-center border border-dashed border-gray-200 bg-gray-50/50">
+          <p className="text-gray-400 font-serif italic text-lg">
+            No rooms found in the collection.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm("");
+              setFilterType("All");
+            }}
+            className="mt-4 text-xs uppercase tracking-widest text-[#967D69] hover:text-gray-900 underline"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+          {filteredRooms.map((room) => (
+            <RoomCard key={room.id} room={room} onDelete={handleDelete} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

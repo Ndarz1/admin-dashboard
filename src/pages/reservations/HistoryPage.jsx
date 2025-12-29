@@ -1,57 +1,108 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HistoryTableRow from "../../components/reservations/HistoryTableRow";
+import { ShieldAlert } from "lucide-react";
 
 const HistoryPage = () => {
+  const [historyData, setHistoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const historyData = [
-    {
-      id: 101,
-      user: "Himpunan Mahasiswa TI",
-      room: "Aula Serbaguna",
-      date: "10 Dec 2025",
-      time: "08:00 - 12:00",
-      status: "Approved",
-      actionBy: "Admin",
-      actionDate: "05 Dec 2025",
-    },
-    {
-      id: 102,
-      user: "Dosen Tamu (Mr. John)",
-      room: "Ruang Rapat Utama",
-      date: "09 Dec 2025",
-      time: "09:00 - 11:00",
-      status: "Done",
-      actionBy: "System",
-      actionDate: "09 Dec 2025",
-    },
-    {
-      id: 103,
-      user: "Mahasiswa Semester 1",
-      room: "Laboratorium Jaringan",
-      date: "08 Dec 2025",
-      time: "13:00 - 15:00",
-      status: "Rejected",
-      actionBy: "Admin",
-      actionDate: "01 Dec 2025",
-    },
-    {
-      id: 104,
-      user: "UKM Musik",
-      room: "Aula Serbaguna",
-      date: "01 Dec 2025",
-      time: "15:00 - 18:00",
-      status: "Cancelled",
-      actionBy: "User",
-      actionDate: "30 Nov 2025",
-    },
-  ];
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+
+        const response = await fetch("http://localhost:5000/api/reservations", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const contentType = response.headers.get("content-type");
+
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Server response is not JSON");
+        }
+
+        const json = await response.json();
+
+        if (json.success) {
+          const formattedData = json.data.map((item) => {
+            let manualName = null;
+
+            if (item.purpose && item.purpose.includes("[Data Pemohon]")) {
+              const details = item.purpose.split("[Data Pemohon]")[1];
+              const nameMatch = details.match(/Nama:\s*(.*)/);
+              if (nameMatch) manualName = nameMatch[1].trim();
+            }
+
+            return {
+              id: item.id,
+              user: manualName || (item.user ? item.user.name : "Unknown User"),
+              room: item.room ? item.room.name : "Unknown Room",
+              date: new Date(item.event_date).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              }),
+              time: `${item.start_time} - ${item.end_time}`,
+              status: item.status,
+              actionBy: "Admin",
+              actionDate: new Date(item.updatedAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              }),
+            };
+          });
+          setHistoryData(formattedData);
+        } else {
+          throw new Error(json.message || "Failed to fetch history");
+        }
+      } catch (err) {
+        console.error("Error fetching history:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, []);
 
   const filteredHistory = historyData.filter(
     (item) =>
       item.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.room.toLowerCase().includes(searchTerm.toLowerCase()),
+      item.room.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="w-full h-96 flex flex-col items-center justify-center text-gray-400 gap-4">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-[#967D69] rounded-full animate-spin"></div>
+        Loading archives...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-96 flex flex-col items-center justify-center text-center px-6">
+        <ShieldAlert size={48} className="text-gray-300 mb-4" />
+        <h2 className="text-xl font-serif text-gray-800 mb-2">
+          Unable to Load History
+        </h2>
+        <p className="text-gray-500 text-sm mb-4">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-[#967D69] font-bold text-xs hover:underline uppercase tracking-widest"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full fade-in pb-20 font-sans text-gray-800">
@@ -61,7 +112,7 @@ const HistoryPage = () => {
             Reservation Archives
           </h2>
           <p className="text-gray-500 mt-2 font-light tracking-wide">
-            A complete history of all past bookings and decisions.
+            A complete history of all past bookings.
           </p>
         </div>
 

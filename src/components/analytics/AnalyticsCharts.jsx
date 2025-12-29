@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -14,33 +14,55 @@ import {
 } from "recharts";
 
 const AnalyticsCharts = () => {
-  const trendData = [
-    { name: "Mon", bookings: 12 },
-    { name: "Tue", bookings: 19 },
-    { name: "Wed", bookings: 15 },
-    { name: "Thu", bookings: 25 },
-    { name: "Fri", bookings: 32 },
-    { name: "Sat", bookings: 20 },
-    { name: "Sun", bookings: 8 },
-  ];
+  const [trendData, setTrendData] = useState([]);
+  const [pieData, setPieData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const pieData = [
-    { name: "Labs", value: 45 },
-    { name: "Aula", value: 25 },
-    { name: "Meeting", value: 20 },
-    { name: "Class", value: 10 },
-  ];
+  const fetchAnalytics = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(
+        "http://localhost:5000/api/analytics/dashboard",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await response.json();
 
-  const COLORS = ["#be123c", "#1f2937", "#9ca3af", "#e5e7eb"];
+      if (json.success) {
+        setTrendData(json.data.trend || []);
+        setPieData(json.data.popularity || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch analytics", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
+
+  const COLORS = ["#be123c", "#1f2937", "#9ca3af", "#e5e7eb", "#f87171"];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10 animate-pulse">
+        <div className="lg:col-span-2 h-96 bg-gray-100 rounded-lg"></div>
+        <div className="h-96 bg-gray-100 rounded-lg"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-      <div className="lg:col-span-2 bg-white p-8 border border-gray-100 shadow-sm">
+      <div className="lg:col-span-2 bg-white p-8 border border-gray-100 shadow-sm min-w-0">
         <h3 className="text-lg font-serif text-gray-900 mb-6">
           Weekly Utilization Trend
         </h3>
         <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
@@ -85,12 +107,12 @@ const AnalyticsCharts = () => {
         </div>
       </div>
 
-      <div className="bg-white p-8 border border-gray-100 shadow-sm">
+      <div className="bg-white p-8 border border-gray-100 shadow-sm min-w-0">
         <h3 className="text-lg font-serif text-gray-900 mb-6">
           Room Popularity
         </h3>
         <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
               <Pie
                 data={pieData}
